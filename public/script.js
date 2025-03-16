@@ -192,3 +192,9 @@ function parseHumidityPressure(humidity, pressure) {
 
 // Initialize the app
 initialize();
+
+module.exports = {
+    fetchWeatherData,
+    isValidInput,
+    addToRecentSearches
+}
