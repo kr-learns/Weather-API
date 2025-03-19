@@ -67,7 +67,7 @@ function displayWeather(data) {
 
     // Fix the -0 issue for minTemperature
     const minTemperature = data.minTemperature === '-0°' ? '0°' : data.minTemperature;
-    
+
 
     // Clean the maxTemperature to remove any extra characters after the degree symbol
     let maxTemperature = data.maxTemperature ? data.maxTemperature : 'N/A';  // Default value if empty
@@ -126,6 +126,12 @@ function clearError() {
     errorElement.classList.remove('visible');
 }
 
+function sanitizeHTML(str) {
+    const div = document.createElement('div');
+    div.textContent = str;
+    return div.innerHTML;
+}
+
 function addToRecentSearches(city) {
     let recent = JSON.parse(localStorage.getItem('recentSearches')) || [];
     recent = [city, ...recent.filter(c => c !== city)].slice(0, 5);
@@ -135,9 +141,12 @@ function addToRecentSearches(city) {
 
 function displayRecentSearches(recent) {
     const list = document.getElementById('recent-list');
-    list.innerHTML = recent.map(city => `
-        <button class="recent-item" data-city="${city}">${city}</button>
-    `).join('');
+    list.innerHTML = recent
+        .map(city => `
+            <button class="recent-item" data-city="${sanitizeHTML(city)}">
+                ${sanitizeHTML(city)}
+            </button>`)
+        .join('');
     list.style.display = 'flex';
     list.style.flexWrap = 'wrap';
 
