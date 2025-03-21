@@ -5,6 +5,8 @@ const submitBtn = document.getElementById('submit-btn');
 const spinner = document.querySelector('.spinner');
 const errorElement = document.getElementById('city-error');
 
+let recentSearches = [];
+
 form.addEventListener('submit', handleSubmit);
 
 function initialize() {
@@ -132,14 +134,34 @@ function sanitizeHTML(str) {
     return div.innerHTML;
 }
 
-function addToRecentSearches(city) {
-    let recent = JSON.parse(localStorage.getItem('recentSearches')) || [];
-    recent = [city, ...recent.filter(c => c !== city)].slice(0, 5);
-    localStorage.setItem('recentSearches', JSON.stringify(recent));
-    displayRecentSearches(recent);
+function isLocalStorageAvailable() {
+    try {
+        const testKey = '__test__';
+        localStorage.setItem(testKey, '1');
+        localStorage.removeItem(testKey);
+        return true;
+    } catch (error) {
+        console.warn("⚠️ localStorage not available. Using in-memory fallback.");
+        return false;
+    }
 }
 
-function displayRecentSearches(recent) {
+
+function addToRecentSearches(city) {
+    if (isLocalStorageAvailable()) {
+        let recent = JSON.parse(localStorage.getItem('recentSearches')) || [];
+        recent = [city, ...recent.filter(c => c !== city)].slice(0, 5);
+        localStorage.setItem('recentSearches', JSON.stringify(recent));
+    } else {
+        recentSearches = [city, ...recentSearches.filter(c => c !== city)].slice(0, 5);
+    }
+    displayRecentSearches();
+}
+
+function displayRecentSearches() {
+    const recent = isLocalStorageAvailable()
+        ? JSON.parse(localStorage.getItem('recentSearches')) || []
+        : recentSearches;
     const list = document.getElementById('recent-list');
     list.innerHTML = recent
         .map(city => `
@@ -159,8 +181,7 @@ function displayRecentSearches(recent) {
 }
 
 function loadRecentSearches() {
-    const recent = JSON.parse(localStorage.getItem('recentSearches')) || [];
-    displayRecentSearches(recent);
+    displayRecentSearches();
 }
 
 function setupServiceWorker() {
@@ -202,7 +223,7 @@ function parseHumidityPressure(humidity, pressure) {
 // Initialize the app
 initialize();
 
-module.exports = {
+export {
     fetchWeatherData,
     isValidInput,
     addToRecentSearches
