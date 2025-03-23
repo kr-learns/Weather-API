@@ -1,3 +1,5 @@
+
+
 const form = document.getElementById('weather-form');
 const cityInput = document.getElementById('city');
 const weatherData = document.getElementById('weather-data');
@@ -22,7 +24,7 @@ async function handleSubmit(e) {
     clearError();
 
     if (!isValidInput(city)) {
-        showError('Please enter a valid city name');
+        showError('Please enter a valid city name (e.g., São Paulo, O\'Fallon).');
         return;
     }
 
@@ -39,7 +41,7 @@ async function handleSubmit(e) {
 }
 
 async function fetchWeatherData(city) {
-    const URL = 'https://weather-api-ex1z.onrender.com';
+    const URL = 'http://localhost:3003';
     const response = await fetch(`${URL}/api/weather/${city}`);
 
     if (!response.ok) {
@@ -70,12 +72,11 @@ function displayWeather(data) {
     // Fix the -0 issue for minTemperature
     const minTemperature = data.minTemperature === '-0°' ? '0°' : data.minTemperature;
 
-
     // Clean the maxTemperature to remove any extra characters after the degree symbol
     let maxTemperature = data.maxTemperature ? data.maxTemperature : 'N/A';  // Default value if empty
 
     // Use regular expression to only capture numbers and the degree symbol (°)
-    maxTemperature = maxTemperature.match(/\d+°/);  // This matches a number followed by the degree symbol
+    maxTemperature = maxTemperature.match(/-?\d+°/);  // This matches a number (including negative) followed by the degree symbol
 
     // If match is found, take the first match; otherwise, return 'N/A'
     maxTemperature = maxTemperature ? maxTemperature[0] : 'N/A';
@@ -94,10 +95,10 @@ function displayWeather(data) {
             <div class="weather-details">
                 <p><strong>Date:</strong> ${data.date || 'N/A'}</p>
                 <p><strong>Condition:</strong> ${data.condition || 'N/A'}</p>
-                <p><strong>Min Temp:</strong> ${minTemperature || 'N/A'}</p>
-                <p><strong>Max Temp:</strong> ${maxTemperature || 'N/A'}</p>
+                <p><strong>Min Temp:</strong> ${`${minTemperature}` || 'N/A'}</p>
+                <p><strong>Max Temp:</strong> ${`${maxTemperature}C` || 'N/A'}</p>
                 <p><strong>Humidity:</strong> ${parsedData.humidity || 'N/A'}%</p>
-                <p><strong>Pressure:</strong> ${parsedData.pressure || 'N/A'} Pa</p>
+                <p><strong>Pressure:</strong> ${parsedData.pressure || 'N/A'}</p>
             </div>
         </div>
     `;
@@ -106,10 +107,9 @@ function displayWeather(data) {
     weatherData.classList.remove('hidden');
 }
 
-
-
 function isValidInput(city) {
-    return /^[a-zA-Z\s-]{2,50}$/.test(city);
+    // Updated regex to support international city names with special characters
+    return /^[\p{L}\s'’-]{2,50}$/u.test(city);
 }
 
 function showError(message) {
@@ -123,7 +123,6 @@ function showError(message) {
 }
 
 function clearError() {
-    const errorElement = document.getElementById('city-error');
     errorElement.textContent = '';
     errorElement.classList.remove('visible');
 }
@@ -145,7 +144,6 @@ function isLocalStorageAvailable() {
         return false;
     }
 }
-
 
 function addToRecentSearches(city) {
     if (isLocalStorageAvailable()) {
@@ -187,13 +185,12 @@ function loadRecentSearches() {
 function setupServiceWorker() {
     if ('serviceWorker' in navigator) {
         navigator.serviceWorker
-            .register('/sw.js')
+            .register('./sw.js')  // Use relative path for service worker
             .then(() => console.log('Service Worker registered'))
             .catch(err => console.log('SW registration failed:', err));
     }
 }
 
-// Parsing humidity and pressure data
 function parseHumidityPressure(humidity, pressure) {
     // Handle if the humidity and pressure are direct numeric values from API
     const parsedHumidity = humidity || "N/A";
@@ -204,16 +201,16 @@ function parseHumidityPressure(humidity, pressure) {
 
         // If the pressure value seems unusually high (greater than 10000), divide it to normalize it to a realistic range
         if (pressure > 10000) {
-            return Math.round(pressure / 100);  // Scale it down by dividing by 100
+            return `${(pressure / 100).toFixed(2)} hPa`;  // Scale it down by dividing by 100
         }
 
         // If the pressure value is large but not too big, divide by 10 to bring it into a more standard range
         if (pressure > 1000) {
-            return Math.round(pressure / 10);  // Divide by 10 for pressure within a realistic atmospheric range
+            return `${(pressure / 10).toFixed(2)} hPa`;  // Divide by 10 for pressure within a realistic atmospheric range
         }
 
         // Otherwise, just return the pressure as is, rounded to the nearest integer
-        return Math.round(pressure);
+        return `${pressure} Pa`;
     };
 
     const parsedPressure = parsePressure(pressure);
@@ -227,4 +224,4 @@ export {
     fetchWeatherData,
     isValidInput,
     addToRecentSearches
-}
+};
