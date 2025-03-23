@@ -41,22 +41,31 @@ async function handleSubmit(e) {
 }
 
 async function fetchWeatherData(city) {
-    const URL = 'http://localhost:3003';
-    const response = await fetch(`${URL}/api/weather/${city}`);
+    const URL = 'https://weather-api-ex1z.onrender.com';
 
-    if (!response.ok) {
-        const errorData = await response.json();
-        const errorMessage = errorData.error || 'Failed to fetch weather data';
+    try {
+        const response = await fetch(`${URL}/api/weather/${city}`);
 
-        if (response.status === 404) {
-            throw new Error('City not found. Please enter a valid city name.');
+        if (!response.ok) {
+            const errorData = await response.json();
+            const errorMessage = errorData.error || 'Failed to fetch weather data';
+
+            if (response.status === 404) {
+                throw new Error('City not found. Please enter a valid city name.');
+            }
+
+            throw new Error(errorMessage);
         }
 
-        throw new Error(errorMessage);
+        return await response.json();
+    } catch (error) {
+        if (error instanceof TypeError) {
+            throw new Error('Network error. Please check your connection and try again.');
+        }
+        throw new Error(error.message || 'An unexpected error occurred');
     }
-
-    return response.json();
 }
+
 
 function toggleLoading(isLoading) {
     submitBtn.disabled = isLoading;
