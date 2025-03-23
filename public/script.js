@@ -1,9 +1,25 @@
-const form = document.getElementById('weather-form');
-const cityInput = document.getElementById('city');
-const weatherData = document.getElementById('weather-data');
-const submitBtn = document.getElementById('submit-btn');
-const spinner = document.querySelector('.spinner');
-const errorElement = document.getElementById('city-error');
+// Function to log selector failures
+function logSelectorFailure(selector) {
+    console.error(`Selector failure: ${selector}`);
+    alert(`Failed to find element with selector: ${selector}. Please check the selector or update it if the target website has changed.`);
+}
+
+// Function to get element by selector with logging
+function getElement(selector) {
+    const element = document.querySelector(selector);
+    if (!element) {
+        logSelectorFailure(selector);
+    }
+    return element;
+}
+
+// Update existing code to use getElement function
+const form = getElement('#weather-form');
+const cityInput = getElement('#city');
+const weatherData = getElement('#weather-data');
+const submitBtn = getElement('#submit-btn');
+const spinner = getElement('.spinner');
+const errorElement = getElement('#city-error');
 
 let recentSearches = [];
 
@@ -63,7 +79,6 @@ async function fetchWeatherData(city) {
         throw new Error(error.message || 'An unexpected error occurred');
     }
 }
-
 
 function toggleLoading(isLoading) {
     submitBtn.disabled = isLoading;
@@ -224,6 +239,15 @@ function parseTemperature(temp) {
     const match = temp.match(/-?\d+°/);
     return match ? match[0] : 'N/A';
 }
+
+// Documentation for updating CSS selectors
+/**
+ * If the target website changes its structure, the CSS selectors used in this script may need to be updated.
+ * To update the selectors:
+ * 1. Identify the new structure of the target website.
+ * 2. Update the selectors in the getElement function calls.
+ * 3. Test the application to ensure the new selectors work correctly.
+ */
 
 // Initialize the app
 initialize();
