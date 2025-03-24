@@ -1,9 +1,25 @@
-const form = document.getElementById('weather-form');
-const cityInput = document.getElementById('city');
-const weatherData = document.getElementById('weather-data');
-const submitBtn = document.getElementById('submit-btn');
-const spinner = document.querySelector('.spinner');
-const errorElement = document.getElementById('city-error');
+// Function to log selector failures
+function logSelectorFailure(selector) {
+    console.error(`Selector failure: ${selector}`);
+    alert(`Failed to find element with selector: ${selector}. Please check the selector or update it if the target website has changed.`);
+}
+
+// Function to get element by selector with logging
+function getElement(selector) {
+    const element = document.querySelector(selector);
+    if (!element) {
+        logSelectorFailure(selector);
+    }
+    return element;
+}
+
+// Update existing code to use getElement function
+const form = getElement('#weather-form');
+const cityInput = getElement('#city');
+const weatherData = getElement('#weather-data');
+const submitBtn = getElement('#submit-btn');
+const spinner = getElement('.spinner');
+const errorElement = getElement('#city-error');
 
 let recentSearches = [];
 
@@ -64,7 +80,6 @@ async function fetchWeatherData(city) {
     }
 }
 
-
 function toggleLoading(isLoading) {
     submitBtn.disabled = isLoading;
     spinner.classList.toggle('hidden', !isLoading);
@@ -96,7 +111,7 @@ function displayWeather(data) {
             <div class="weather-details">
                 <p><strong>Date:</strong> ${data.date || 'N/A'}</p>
                 <p><strong>Condition:</strong> ${data.condition || 'N/A'}</p>
-                <p><strong>Min Temp:</strong> ${`${minTemperature}` || 'N/A'}</p>
+                <p><strong>Min Temp:</strong> ${`${minTemperature}C` || 'N/A'}</p>
                 <p><strong>Max Temp:</strong> ${`${maxTemperature}C` || 'N/A'}</p>
                 <p><strong>Humidity:</strong> ${parsedData.humidity || 'N/A'}%</p>
                 <p><strong>Pressure:</strong> ${parsedData.pressure || 'N/A'}</p>
@@ -194,24 +209,23 @@ function setupServiceWorker() {
 
 function parseHumidityPressure(humidity, pressure) {
     // Handle if the humidity and pressure are direct numeric values from API
-    const parsedHumidity = humidity || "N/A";
+    const parsedHumidity = parseInt(humidity, 10) || "N/A"; // Remove leading zeros
 
     const parsePressure = (rawPressure) => {
-        // Convert the raw pressure value to float
-        const pressure = parseFloat(rawPressure);
+        // Use regex to extract numeric value from pressure string
+        const match = rawPressure.match(/(\d+(\.\d+)?)/);
+        if (!match) return 'N/A';
 
-        // If the pressure value seems unusually high (greater than 10000), divide it to normalize it to a realistic range
-        if (pressure > 10000) {
-            return `${(pressure / 100).toFixed(2)} hPa`;  // Scale it down by dividing by 100
+        const pressureValue = parseFloat(match[0]);
+
+        // Normalize pressure value if necessary
+        if (pressureValue > 10000) {
+            return `${(pressureValue / 100).toFixed(2)} hPa`;
         }
-
-        // If the pressure value is large but not too big, divide by 10 to bring it into a more standard range
-        if (pressure > 1000) {
-            return `${(pressure / 10).toFixed(2)} hPa`;  // Divide by 10 for pressure within a realistic atmospheric range
+        if (pressureValue > 1000) {
+            return `${(pressureValue / 10).toFixed(2)} hPa`;
         }
-
-        // Otherwise, just return the pressure as is, rounded to the nearest integer
-        return `${pressure} Pa`;
+        return `${pressureValue} Pa`;
     };
 
     const parsedPressure = parsePressure(pressure);
@@ -220,10 +234,19 @@ function parseHumidityPressure(humidity, pressure) {
 
 function parseTemperature(temp) {
     if (!temp) return 'N/A';
-    // Use regular expression to only capture numbers and the degree symbol (°)
+    // Use regex to capture numbers and the degree symbol (°)
     const match = temp.match(/-?\d+°/);
     return match ? match[0] : 'N/A';
 }
+
+// Documentation for updating CSS selectors
+/**
+ * If the target website changes its structure, the CSS selectors used in this script may need to be updated.
+ * To update the selectors:
+ * 1. Identify the new structure of the target website.
+ * 2. Update the selectors in the getElement function calls.
+ * 3. Test the application to ensure the new selectors work correctly.
+ */
 
 // Initialize the app
 initialize();
