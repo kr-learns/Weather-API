@@ -1,5 +1,3 @@
-
-
 const form = document.getElementById('weather-form');
 const cityInput = document.getElementById('city');
 const weatherData = document.getElementById('weather-data');
@@ -79,16 +77,10 @@ function displayWeather(data) {
     }
 
     // Fix the -0 issue for minTemperature
-    const minTemperature = data.minTemperature === '-0°' ? '0°' : data.minTemperature;
+    const minTemperature = parseTemperature(data.minTemperature);
 
     // Clean the maxTemperature to remove any extra characters after the degree symbol
-    let maxTemperature = data.maxTemperature ? data.maxTemperature : 'N/A';  // Default value if empty
-
-    // Use regular expression to only capture numbers and the degree symbol (°)
-    maxTemperature = maxTemperature.match(/-?\d+°/);  // This matches a number (including negative) followed by the degree symbol
-
-    // If match is found, take the first match; otherwise, return 'N/A'
-    maxTemperature = maxTemperature ? maxTemperature[0] : 'N/A';
+    const maxTemperature = parseTemperature(data.maxTemperature);
 
     // Parse humidity and pressure correctly
     const parsedData = parseHumidityPressure(data.humidity, data.pressure);
@@ -224,6 +216,13 @@ function parseHumidityPressure(humidity, pressure) {
 
     const parsedPressure = parsePressure(pressure);
     return { humidity: parsedHumidity, pressure: parsedPressure };
+}
+
+function parseTemperature(temp) {
+    if (!temp) return 'N/A';
+    // Use regular expression to only capture numbers and the degree symbol (°)
+    const match = temp.match(/-?\d+°/);
+    return match ? match[0] : 'N/A';
 }
 
 // Initialize the app
