@@ -162,12 +162,17 @@ function isLocalStorageAvailable() {
 }
 
 function addToRecentSearches(city) {
+    const normalizedCity = city.trim().toLowerCase(); // Normalize to lowercase
     if (isLocalStorageAvailable()) {
         let recent = JSON.parse(localStorage.getItem('recentSearches')) || [];
-        recent = [city, ...recent.filter(c => c !== city)].slice(0, 5);
+        recent = recent.filter(c => c.toLowerCase() !== normalizedCity);
+        recent = [city, ...recent].slice(0, 5);
         localStorage.setItem('recentSearches', JSON.stringify(recent));
     } else {
-        recentSearches = [city, ...recentSearches.filter(c => c !== city)].slice(0, 5);
+        recentSearches = recentSearches
+            .filter(c => c.toLowerCase() !== normalizedCity)
+            .slice(0, 4);
+        recentSearches.unshift(city);
     }
     displayRecentSearches();
 }
