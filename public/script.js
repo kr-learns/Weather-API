@@ -165,16 +165,17 @@ function addToRecentSearches(city) {
     const normalizedCity = city.trim().toLowerCase(); // Normalize to lowercase
     try {
         if (isLocalStorageAvailable()) {
-        let recent = JSON.parse(localStorage.getItem('recentSearches')) || [];
-        recent = recent.filter(c => c.toLowerCase() !== normalizedCity);
-        recent = [city, ...recent].slice(0, 5);
-        localStorage.setItem('recentSearches', JSON.stringify(recent));
-    } else {
-        recentSearches = recentSearches
-            .filter(c => c.toLowerCase() !== normalizedCity)
-            .slice(0, 4);
-        recentSearches.unshift(city);
-    } catch (error) {
+            let recent = JSON.parse(localStorage.getItem('recentSearches')) || [];
+            recent = recent.filter(c => c.toLowerCase() !== normalizedCity);
+            recent = [city, ...recent].slice(0, 5);
+            localStorage.setItem('recentSearches', JSON.stringify(recent));
+        } else {
+            recentSearches = recentSearches
+                .filter(c => c.toLowerCase() !== normalizedCity)
+                .slice(0, 4);
+            recentSearches.unshift(city);
+        }
+    }catch (error) {
         if (error.name === 'QuotaExceededError') {
             console.warn('LocalStorage quota exceeded. Removing oldest search.');
 
