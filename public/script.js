@@ -162,15 +162,36 @@ function isLocalStorageAvailable() {
 }
 
 function addToRecentSearches(city) {
-    if (isLocalStorageAvailable()) {
-        let recent = JSON.parse(localStorage.getItem('recentSearches')) || [];
-        recent = [city, ...recent.filter(c => c !== city)].slice(0, 5);
-        localStorage.setItem('recentSearches', JSON.stringify(recent));
-    } else {
-        recentSearches = [city, ...recentSearches.filter(c => c !== city)].slice(0, 5);
+    try {
+        if (isLocalStorageAvailable()) {
+            let recent = JSON.parse(localStorage.getItem('recentSearches')) || [];
+
+            recent = [city, ...recent.filter(c => c !== city)].slice(0, 5);
+
+            localStorage.setItem('recentSearches', JSON.stringify(recent));
+        } else {
+            recentSearches = [city, ...recentSearches.filter(c => c !== city)].slice(0, 5);
+        }
+    } catch (error) {
+        if (error.name === 'QuotaExceededError') {
+            console.warn('LocalStorage quota exceeded. Removing oldest search.');
+
+            let recent = JSON.parse(localStorage.getItem('recentSearches')) || [];
+            recent.pop();
+
+            try {
+                localStorage.setItem('recentSearches', JSON.stringify(recent));
+            } catch (retryError) {
+                console.error('Still failing after removing oldest entry:', retryError);
+            }
+        } else {
+            console.error('Error adding to recent searches:', error);
+        }
     }
+
     displayRecentSearches();
 }
+
 
 function displayRecentSearches() {
     const recent = isLocalStorageAvailable()
