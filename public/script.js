@@ -144,9 +144,7 @@ function clearError() {
 }
 
 function sanitizeHTML(str) {
-    const div = document.createElement('div');
-    div.textContent = str;
-    return div.innerHTML;
+    return DOMPurify.sanitize(str);
 }
 
 function isLocalStorageAvailable() {
