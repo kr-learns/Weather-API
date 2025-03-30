@@ -91,15 +91,6 @@ function displayWeather(data) {
         return;
     }
 
-    // Fix the -0 issue for minTemperature
-    const minTemperature = parseTemperature(data.minTemperature);
-
-    // Clean the maxTemperature to remove any extra characters after the degree symbol
-    const maxTemperature = parseTemperature(data.maxTemperature);
-
-    // Parse humidity and pressure correctly
-    const parsedData = parseHumidityPressure(data.humidity, data.pressure);
-
     // Create the template for displaying weather data
     const template = `
         <div class="weather-card">
@@ -113,8 +104,8 @@ function displayWeather(data) {
                 <p><strong>Condition:</strong> ${data.condition || 'N/A'}</p>
                 <p><strong>Min Temp:</strong> ${`${minTemperature}C` || 'N/A'}</p>
                 <p><strong>Max Temp:</strong> ${`${maxTemperature}C` || 'N/A'}</p>
-                <p><strong>Humidity:</strong> ${parsedData.humidity || 'N/A'}%</p>
-                <p><strong>Pressure:</strong> ${parsedData.pressure || 'N/A'}</p>
+                <p><strong>Humidity:</strong> ${data.humidity || 'N/A'}%</p>
+                <p><strong>Pressure:</strong> ${data.pressure || 'N/A'}</p>
             </div>
         </div>
     `;
