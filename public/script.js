@@ -102,8 +102,8 @@ function displayWeather(data) {
             <div class="weather-details">
                 <p><strong>Date:</strong> ${data.date || 'N/A'}</p>
                 <p><strong>Condition:</strong> ${data.condition || 'N/A'}</p>
-                <p><strong>Min Temp:</strong> ${`${minTemperature}C` || 'N/A'}</p>
-                <p><strong>Max Temp:</strong> ${`${maxTemperature}C` || 'N/A'}</p>
+                <p><strong>Min Temp:</strong> ${`${data.minTemperature}C` || 'N/A'}</p>
+                <p><strong>Max Temp:</strong> ${`${data.maxTemperature}C` || 'N/A'}</p>
                 <p><strong>Humidity:</strong> ${data.humidity || 'N/A'}%</p>
                 <p><strong>Pressure:</strong> ${data.pressure || 'N/A'}</p>
             </div>
