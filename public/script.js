@@ -131,10 +131,15 @@ function isValidInput(city) {
 function showError(message) {
     errorElement.textContent = message;
     errorElement.classList.add('visible');
+
+    errorElement.setAttribute('tabindex', '-1');
+    errorElement.focus();
+
     weatherData.innerHTML = ''; // Clear previous data
 
     setTimeout(() => {
         errorElement.classList.remove('visible');
+        errorElement.removeAttribute('tabindex');
     }, 5000);
 }
 
