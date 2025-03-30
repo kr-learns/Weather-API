@@ -28,6 +28,7 @@ form.addEventListener('submit', handleSubmit);
 function initialize() {
     loadRecentSearches();
     setupServiceWorker();
+    loadConfig();
 }
 
 async function handleSubmit(e) {
@@ -155,18 +156,38 @@ function isLocalStorageAvailable() {
     }
 }
 
+async function loadConfig() {
+    try {
+        const response = await fetch('/config');
+        if (!response.ok) throw new Error('Failed to load config');
+
+        const config = await response.json();
+
+        const limit = parseInt(config.RECENT_SEARCH_LIMIT, 10) || 5;
+        localStorage.setItem('recentSearchLimit', limit);
+        console.log(`Recent search limit: ${limit}`);
+
+        return limit;
+    } catch (error) {
+        console.error('Failed to load environment config:', error);
+        return 5; // Fallback limit
+    }
+}
+
+
 function addToRecentSearches(city) {
     const normalizedCity = city.trim().toLowerCase(); // Normalize to lowercase
+    let limit = parseInt(localStorage.getItem('recentSearchLimit'), 10) || 5;
     try {
         if (isLocalStorageAvailable()) {
             let recent = JSON.parse(localStorage.getItem('recentSearches')) || [];
             recent = recent.filter(c => c.toLowerCase() !== normalizedCity);
-            recent = [city, ...recent].slice(0, 5);
+            recent = [city, ...recent].slice(0, limit);
             localStorage.setItem('recentSearches', JSON.stringify(recent));
         } else {
             recentSearches = recentSearches
                 .filter(c => c.toLowerCase() !== normalizedCity)
-                .slice(0, 4);
+                .slice(0, limit - 1);
             recentSearches.unshift(city);
         }
     } catch (error) {
