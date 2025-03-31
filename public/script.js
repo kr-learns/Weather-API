@@ -116,7 +116,7 @@ function displayWeather(data) {
 
 function isValidInput(city) {
     // Updated regex to support international city names with special characters
-    return /^[\p{L}\s'’-]{2,50}$/u.test(city);
+    return /^[\p{L}\p{M}\s'’-]{2,50}$/u.test(city);
 }
 
 function showError(message) {
