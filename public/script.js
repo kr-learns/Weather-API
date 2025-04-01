@@ -56,7 +56,9 @@ async function handleSubmit(e) {
 }
 
 async function fetchWeatherData(city) {
-    const URL = 'https://weather-api-ex1z.onrender.com';
+    const configResponse = await fetch('/config');
+    const config = await configResponse.json();
+    const URL = config.API_URL || 'https://weather-api-ex1z.onrender.com';
 
     try {
         const response = await fetch(`${URL}/api/weather/${city}`);
@@ -103,8 +105,8 @@ function displayWeather(data) {
             <div class="weather-details">
                 <p><strong>Date:</strong> ${data.date || 'N/A'}</p>
                 <p><strong>Condition:</strong> ${data.condition || 'N/A'}</p>
-                <p><strong>Min Temp:</strong> ${`${data.minTemperature}C` || 'N/A'}</p>
-                <p><strong>Max Temp:</strong> ${`${data.maxTemperature}C` || 'N/A'}</p>
+                <p><strong>Min Temp:</strong> ${`${data.minTemperature}` || 'N/A'}</p>
+                <p><strong>Max Temp:</strong> ${`${data.maxTemperature}` || 'N/A'}</p>
                 <p><strong>Humidity:</strong> ${data.humidity || 'N/A'}%</p>
                 <p><strong>Pressure:</strong> ${data.pressure || 'N/A'}</p>
             </div>
@@ -124,15 +126,26 @@ function showError(message) {
     errorElement.textContent = message;
     errorElement.classList.add('visible');
 
+    const closeBtn = document.createElement('button');
+    closeBtn.textContent = '×';
+    closeBtn.classList.add('close-btn');
+    closeBtn.setAttribute('aria-label', 'Close error message');
+    closeBtn.onclick = () => clearError();
+
+    // Append close button to the error message
+    errorElement.innerHTML = '';
+    errorElement.appendChild(document.createTextNode(message));
+    errorElement.appendChild(closeBtn);
+
+
     errorElement.setAttribute('tabindex', '-1');
     errorElement.focus();
 
     weatherData.innerHTML = ''; // Clear previous data
 
-    setTimeout(() => {
-        errorElement.classList.remove('visible');
-        errorElement.removeAttribute('tabindex');
-    }, 5000);
+    // setTimeout(() => { errorElement.classList.remove('visible');
+    //     errorElement.removeAttribute('tabindex');
+    // }, 5000);
 }
 
 function clearError() {
@@ -218,12 +231,16 @@ function displayRecentSearches() {
     const list = document.getElementById('recent-list');
     list.innerHTML = recent
         .map(city => `
-            <button class="recent-item" data-city="${sanitizeHTML(city)}">
-                ${sanitizeHTML(city)}
-            </button>`)
+            <li role="listitem">
+                <button class="recent-item" data-city="${sanitizeHTML(city)}">
+                    ${sanitizeHTML(city)}
+                </button>
+            </li>`)
         .join('');
+
     list.style.display = 'flex';
     list.style.flexWrap = 'wrap';
+    list.style.listStyle = 'none';
 
     document.querySelectorAll('.recent-item').forEach(button => {
         button.addEventListener('click', function () {
@@ -249,6 +266,7 @@ function setupServiceWorker() {
                     newSW.onstatechange = () => {
                         if (newSW.state === 'installed' && navigator.serviceWorker.controller) {
                             console.log('New content is available, please refresh.');
+                            showUpdateNotification();
                         }
                     };
                 };
@@ -257,36 +275,39 @@ function setupServiceWorker() {
     });
 }
 
-function parseHumidityPressure(humidity, pressure) {
-    // Handle if the humidity and pressure are direct numeric values from API
-    const parsedHumidity = parseInt(humidity, 10) || "N/A"; // Remove leading zeros
+function showUpdateNotification() {
+    const updateBanner = document.createElement('div');
+    updateBanner.classList.add('update-banner');
+    updateBanner.innerHTML = `
+        <p>New version available. <button id="reload-btn">Reload</button></p>
+    `;
 
-    const parsePressure = (rawPressure) => {
-        // Use regex to extract numeric value from pressure string
-        const match = rawPressure.match(/(\d+(\.\d+)?)/);
-        if (!match) return 'N/A';
+    document.body.appendChild(updateBanner);
 
-        const pressureValue = parseFloat(match[0]);
+    document.getElementById('reload-btn').addEventListener('click', () => {
+        window.location.reload();
+    });
 
-        // Normalize pressure value if necessary
-        if (pressureValue > 10000) {
-            return `${(pressureValue / 100).toFixed(2)} hPa`;
+    const style = document.createElement('style');
+    style.textContent = `
+        .update-banner {
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            background: #0078D7;
+            color: white;
+            padding: 15px;
+            text-align: center;
+            z-index: 9999;
         }
-        if (pressureValue > 1000) {
-            return `${(pressureValue / 10).toFixed(2)} hPa`;
+        .update-banner button {
+            margin-left: 10px;
+            padding: 5px 10px;
+            cursor: pointer;
         }
-        return `${pressureValue} Pa`;
-    };
-
-    const parsedPressure = parsePressure(pressure);
-    return { humidity: parsedHumidity, pressure: parsedPressure };
-}
-
-function parseTemperature(temp) {
-    if (!temp) return 'N/A';
-    // Use regex to capture numbers and the degree symbol (°)
-    const match = temp.match(/-?\d+°/);
-    return match ? match[0] : 'N/A';
+    `;
+    document.head.appendChild(style);
 }
 
 // Documentation for updating CSS selectors
