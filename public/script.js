@@ -64,14 +64,20 @@ async function fetchWeatherData(city) {
         const response = await fetch(`${URL}/api/weather/${city}`);
 
         if (!response.ok) {
-            const errorData = await response.json();
-            const errorMessage = errorData.error || 'Failed to fetch weather data';
+            const contentType = response.headers.get('Content-Type');
 
-            if (response.status === 404) {
-                throw new Error('City not found. Please enter a valid city name.');
+            if (contentType && contentType.includes('application/json')) {
+                const errorData = await response.json();
+                const errorMessage = errorData.error || 'Failed to fetch weather data';
+
+                if (response.status === 404) {
+                    throw new Error('City not found. Please enter a valid city name.');
+                }
+
+                throw new Error(errorMessage);
+            } else {
+                throw new Error(`Unexpected error: ${response.status} ${response.statusText}`);
             }
-
-            throw new Error(errorMessage);
         }
 
         return await response.json();
@@ -82,6 +88,7 @@ async function fetchWeatherData(city) {
         throw new Error(error.message || 'An unexpected error occurred');
     }
 }
+
 
 function toggleLoading(isLoading) {
     submitBtn.disabled = isLoading;
@@ -118,8 +125,8 @@ function displayWeather(data) {
 }
 
 function isValidInput(city) {
-    // Updated regex to support international city names with special characters
-    return /^[\p{L}\p{M}\s'’-]{2,50}$/u.test(city);
+    // Allow letters, spaces, apostrophes, hyphens, and periods
+    return /^[\p{L}\p{M}\s'’.-]{2,50}$/u.test(city);
 }
 
 function showError(message) {
