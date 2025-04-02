@@ -199,7 +199,7 @@ function isLocalStorageAvailable() {
 
 async function loadConfig() {
     try {
-        const response = await fetch('https://weather-api-ex1z.onrender.com/config');
+        const response = await fetch('/config');
         if (!response.ok) throw new Error('Failed to load config');
 
         const config = await response.json();
