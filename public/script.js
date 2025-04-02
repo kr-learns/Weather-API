@@ -68,7 +68,7 @@ async function fetchWeatherData(city) {
         }
 
         // Get config with error handling
-        const configResponse = await fetch('/config');
+        const configResponse = await fetch('https://weather-api-ex1z.onrender.com/config');
         if (!configResponse.ok) {
             throw new Error('Failed to load configuration');
         }
