@@ -34,11 +34,14 @@ function initialize() {
 async function handleSubmit(e) {
     e.preventDefault();
     const city = cityInput.value.trim();
+    console.log('hi')
+    console.log(city)
 
     // Clear the previous error message when a new search starts
     clearError();
 
     if (!isValidInput(city)) {
+      
         showError('Please enter a valid city name (e.g., São Paulo, O\'Fallon).');
         return;
     }
@@ -46,9 +49,11 @@ async function handleSubmit(e) {
     try {
         toggleLoading(true);
         const data = await fetchWeatherData(city);
+        
         displayWeather(data);
         addToRecentSearches(city);
     } catch (error) {
+        console.log(error)
         showError(error.message);
     } finally {
         toggleLoading(false);
@@ -56,13 +61,33 @@ async function handleSubmit(e) {
 }
 
 async function fetchWeatherData(city) {
-    const configResponse = await fetch('/config');
-    const config = await configResponse.json();
-    const URL = config.API_URL || 'https://weather-api-ex1z.onrender.com';
-
     try {
-        const response = await fetch(`${URL}/api/weather/${city}`);
+        // First check if city is provided
+        if (!city) {
+            throw new Error('City parameter is required');
+        }
 
+        // Get config with error handling
+        const configResponse = await fetch('/config');
+        if (!configResponse.ok) {
+            throw new Error('Failed to load configuration');
+        }
+
+        const config = await configResponse.json();
+        
+        // Check if URL exists in config
+        if (!config.API_URL) {
+            throw new Error('API URL not configured');
+        }
+
+       
+       const URL = config.API_URL || 'https://weather-api-ex1z.onrender.com'
+        
+        // Encode the city name for the URL
+        const encodedCity = encodeURIComponent(city);
+        
+        const response = await fetch(`${URL}/api/weather/${encodedCity}`);
+        console.log('response status',response.status)
         if (!response.ok) {
             const contentType = response.headers.get('Content-Type');
 
@@ -71,24 +96,20 @@ async function fetchWeatherData(city) {
                 const errorMessage = errorData.error || 'Failed to fetch weather data';
 
                 if (response.status === 404) {
-                    throw new Error('City not found. Please enter a valid city name.');
+                    throw new Error('City not found. Please check the city name.');
                 }
 
                 throw new Error(errorMessage);
-            } else {
-                throw new Error(`Unexpected error: ${response.status} ${response.statusText}`);
             }
+            throw new Error(`Unexpected error: ${response.status} ${response.statusText}`);
         }
 
         return await response.json();
     } catch (error) {
-        if (error instanceof TypeError) {
-            throw new Error('Network error. Please check your connection and try again.');
-        }
+        console.error('Fetch error:', error);
         throw new Error(error.message || 'An unexpected error occurred');
     }
 }
-
 
 function toggleLoading(isLoading) {
     submitBtn.disabled = isLoading;
@@ -178,7 +199,7 @@ function isLocalStorageAvailable() {
 
 async function loadConfig() {
     try {
-        const response = await fetch('/config');
+        const response = await fetch('http://localhost:3003/config');
         if (!response.ok) throw new Error('Failed to load config');
 
         const config = await response.json();
