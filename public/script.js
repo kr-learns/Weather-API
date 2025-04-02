@@ -100,8 +100,9 @@ async function fetchWeatherData(city) {
                 }
 
                 throw new Error(errorMessage);
+            } else {
+                throw new Error(`Unexpected error: ${response.status} ${response.statusText}`);
             }
-            throw new Error(`Unexpected error: ${response.status} ${response.statusText}`);
         }
 
         return await response.json();
