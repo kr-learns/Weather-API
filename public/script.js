@@ -132,12 +132,8 @@ function displayWeather(data) {
     // Create the template for displaying weather data
     const template = `
         <div class="weather-card">
-            <div class="weather-main">
-                <div class="temp-container">
-                    <span class="temperature">Temp: ${data.temperature || 'N/A'}</span>
-                </div>
-            </div>
             <div class="weather-details">
+                <p><strong>Temp:</strong> ${data.temperature || 'N/A'}</p>
                 <p><strong>Date:</strong> ${data.date || 'N/A'}</p>
                 <p><strong>Condition:</strong> ${data.condition || 'N/A'}</p>
                 <p><strong>Min Temp:</strong> ${`${data.minTemperature}` || 'N/A'}</p>
