@@ -17,7 +17,8 @@ function getElement(selector) {
 const form = getElement('#weather-form');
 const cityInput = getElement('#city');
 const weatherData = getElement('#weather-data');
-const submitBtn = getElement('#submit-btn');
+const weatherBtn = getElement('#weather-btn');
+const searchBtn = getElement('#search-btn');
 const clearBtn = getElement('#clear-btn'); // Add this line
 const spinner = getElement('.spinner');
 const errorElement = getElement('#city-error');
@@ -117,7 +118,8 @@ async function fetchWeatherData(city) {
 }
 
 function toggleLoading(isLoading) {
-    submitBtn.disabled = isLoading;
+    weatherBtn.disabled = isLoading;
+    searchBtn.disabled = isLoading;
     spinner.classList.toggle('hidden', !isLoading);
 }
 
