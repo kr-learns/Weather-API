@@ -178,9 +178,13 @@ function displayWeather(data) {
 }
 
 function isValidInput(city) {
-    // Allow letters, spaces, apostrophes, hyphens, and periods
-    return /^[\p{L}\p{M}\s'’.-]{2,50}$/u.test(city);
+    // ✅ Supports names with accents and optional country codes (e.g., "São Gonçalo", "Delhi, IN")
+    const regex = /^[\p{L}\p{M}\s',.’-]{2,100}(,\s?[A-Z]{2})?$/u;
+    return regex.test(city.trim());
 }
+
+
+
 
 function showError(message) {
     errorElement.textContent = message;
