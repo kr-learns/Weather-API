@@ -17,7 +17,8 @@ function getElement(selector) {
 const form = getElement('#weather-form');
 const cityInput = getElement('#city');
 const weatherData = getElement('#weather-data');
-const submitBtn = getElement('#submit-btn');
+const weatherBtn = getElement('#weather-btn');
+const searchBtn = getElement('#search-btn');
 const clearBtn = getElement('#clear-btn'); // Add this line
 const spinner = getElement('.spinner');
 const errorElement = getElement('#city-error');
@@ -37,32 +38,39 @@ function initialize() {
     loadConfig();
 }
 
+
 async function handleSubmit(e) {
     e.preventDefault();
     const city = cityInput.value.trim();
 
-    // Clear the previous error message when a new search starts
     clearError();
 
+    // ✅ Empty check
+    if (city === '') {
+        showError('City name cannot be empty.');
+        return;
+    }
+
+    // ✅ City format validation
     if (!isValidInput(city)) {
-      
-        showError('Please enter a valid city name (e.g., São Paulo, O\'Fallon).');
+        showError('❌ Invalid city name. Only letters, spaces, apostrophes, periods, and hyphens are allowed.');
         return;
     }
 
     try {
         toggleLoading(true);
         const data = await fetchWeatherData(city);
-        
+
         displayWeather(data);
         addToRecentSearches(city);
     } catch (error) {
-        console.log(error)
+        console.error(error);
         showError(error.message);
     } finally {
         toggleLoading(false);
     }
 }
+
 
 async function fetchWeatherData(city) {
     try {
@@ -117,7 +125,8 @@ async function fetchWeatherData(city) {
 }
 
 function toggleLoading(isLoading) {
-    submitBtn.disabled = isLoading;
+    weatherBtn.disabled = isLoading;
+    searchBtn.disabled = isLoading;
     spinner.classList.toggle('hidden', !isLoading);
 }
 
@@ -127,22 +136,44 @@ function displayWeather(data) {
         return;
     }
 
-    // Create the template for displaying weather data
+    // Determine emoji based on condition
+    let emoji = '';
+    const condition = data.condition?.toLowerCase() || '';
+    if (condition.includes('sun')) emoji = '☀️';
+    else if (condition.includes('rain')) emoji = '🌧️';
+    else if (condition.includes('cloud')) emoji = '☁️';
+    else if (condition.includes('snow')) emoji = '❄️';
+    else if (condition.includes('storm')) emoji = '⛈️';
+    else emoji = '🌈';
+
+    // Show emoji at the top
+    const weatherIcon = document.getElementById('weather-icon');
+    if (weatherIcon) {
+        weatherIcon.textContent = emoji;
+        weatherIcon.style.display = 'block'; // in case it's hidden
+        weatherIcon.classList.remove('hidden');
+    }
+
+    // Clear old cards but keep emoji
+    Array.from(weatherData.children).forEach(child => {
+        if (child.id !== 'weather-icon') child.remove();
+    });
+
     const template = `
         <div class="weather-card">
             <div class="weather-details">
-                <p><strong>Temp:</strong> ${data.temperature || 'N/A'}</p>
+                <p><strong>Temp:</strong> ${data.temperature || 'N/A'}°C</p>
                 <p><strong>Date:</strong> ${data.date || 'N/A'}</p>
                 <p><strong>Condition:</strong> ${data.condition || 'N/A'}</p>
-                <p><strong>Min Temp:</strong> ${`${data.minTemperature}` || 'N/A'}</p>
-                <p><strong>Max Temp:</strong> ${`${data.maxTemperature}` || 'N/A'}</p>
+                <p><strong>Min Temp:</strong> ${data.minTemperature || 'N/A'}°C</p>
+                <p><strong>Max Temp:</strong> ${data.maxTemperature || 'N/A'}°C</p>
                 <p><strong>Humidity:</strong> ${data.humidity || 'N/A'}%</p>
                 <p><strong>Pressure:</strong> ${data.pressure || 'N/A'}</p>
             </div>
         </div>
     `;
 
-    weatherData.innerHTML = template;
+    weatherData.insertAdjacentHTML('beforeend', template);
     weatherData.classList.remove('hidden');
 }
 
