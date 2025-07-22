@@ -38,32 +38,39 @@ function initialize() {
     loadConfig();
 }
 
+
 async function handleSubmit(e) {
     e.preventDefault();
     const city = cityInput.value.trim();
 
-    // Clear the previous error message when a new search starts
     clearError();
 
+    // ✅ Empty check
+    if (city === '') {
+        showError('City name cannot be empty.');
+        return;
+    }
+
+    // ✅ City format validation
     if (!isValidInput(city)) {
-      
-        showError('Please enter a valid city name (e.g., São Paulo, O\'Fallon).');
+        showError('❌ Invalid city name. Only letters, spaces, apostrophes, periods, and hyphens are allowed.');
         return;
     }
 
     try {
         toggleLoading(true);
         const data = await fetchWeatherData(city);
-        
+
         displayWeather(data);
         addToRecentSearches(city);
     } catch (error) {
-        console.log(error)
+        console.error(error);
         showError(error.message);
     } finally {
         toggleLoading(false);
     }
 }
+
 
 async function fetchWeatherData(city) {
     try {
