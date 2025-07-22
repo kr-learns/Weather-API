@@ -7,13 +7,15 @@ function isValidInput(city) {
 }
 
 function fetchWeatherData(city) {
-  return fetch(`/weather/${encodeURIComponent(city)}`).then(async (response) => {
-    if (!response.ok) {
-      const data = await response.json();
-      throw new Error(data.error || "Something went wrong");
-    }
-    return response.json();
-  });
+  return fetch(`/weather/${encodeURIComponent(city)}`).then(
+    async (response) => {
+      if (!response.ok) {
+        const data = await response.json();
+        throw new Error(data.error || "Something went wrong");
+      }
+      return response.json();
+    },
+  );
 }
 
 function addToRecentSearches(city) {
