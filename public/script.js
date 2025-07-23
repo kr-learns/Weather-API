@@ -1,4 +1,7 @@
 
+// Note: Ensure no duplicate 'clearBtn' declarations exist in this file or included scripts.
+// Check index.html for correct selector IDs (e.g., #clear-btn).
+
 // Function to log selector failures
 function logSelectorFailure(selector) {
     console.error(`Selector failure: ${selector}`);
@@ -22,15 +25,17 @@ const cityInput = getElement('#city');
 const weatherData = getElement('#weather-data');
 const weatherBtn = getElement('#weather-btn');
 const searchBtn = getElement('#search-btn');
-const clearBtn = getElement('#clear-btn');
+const clearBtn = getElement('#clear-btn'); // Ensure no duplicate declaration
 const spinner = getElement('.spinner');
 const errorElement = getElement('#city-error');
 
 let recentSearches = [];
 
-form.addEventListener('submit', handleSubmit);
+if (form) {
+    form.addEventListener('submit', handleSubmit);
+}
 
-// Add the clear button event listener after form event listener
+// Add the clear button event listener
 if (clearBtn) {
     clearBtn.addEventListener('click', handleClear);
 }
@@ -43,11 +48,11 @@ function initialize() {
 
 async function handleSubmit(e) {
     e.preventDefault();
-    const city = cityInput.value.trim();
+    const city = cityInput?.value.trim();
 
     clearError();
 
-    if (city === '') {
+    if (!city) {
         showError('City name cannot be empty.');
         return;
     }
@@ -119,9 +124,9 @@ async function fetchWeatherData(city) {
 }
 
 function toggleLoading(isLoading) {
-    weatherBtn.disabled = isLoading;
-    searchBtn.disabled = isLoading;
-    spinner.classList.toggle('hidden', !isLoading);
+    if (weatherBtn) weatherBtn.disabled = isLoading;
+    if (searchBtn) searchBtn.disabled = isLoading;
+    if (spinner) spinner.classList.toggle('hidden', !isLoading);
 }
 
 function displayWeather(data) {
@@ -146,26 +151,28 @@ function displayWeather(data) {
         weatherIcon.classList.remove('hidden');
     }
 
-    Array.from(weatherData.children).forEach(child => {
-        if (child.id !== 'weather-icon') child.remove();
-    });
+    if (weatherData) {
+        Array.from(weatherData.children).forEach(child => {
+            if (child.id !== 'weather-icon') child.remove();
+        });
 
-    const template = `
-        <div class="weather-card">
-            <div class="weather-details">
-                <p><strong>Temp:</strong> ${data.temperature || 'N/A'}°C</p>
-                <p><strong>Date:</strong> ${data.date || 'N/A'}</p>
-                <p><strong>Condition:</strong> ${data.condition || 'N/A'}</p>
-                <p><strong>Min Temp:</strong> ${data.minTemperature || 'N/A'}°C</p>
-                <p><strong>Max Temp:</strong> ${data.maxTemperature || 'N/A'}°C</p>
-                <p><strong>Humidity:</strong> ${data.humidity || 'N/A'}%</p>
-                <p><strong>Pressure:</strong> ${data.pressure || 'N/A'}</p>
+        const template = `
+            <div class="weather-card">
+                <div class="weather-details">
+                    <p><strong>Temp:</strong> ${data.temperature || 'N/A'}°C</p>
+                    <p><strong>Date:</strong> ${data.date || 'N/A'}</p>
+                    <p><strong>Condition:</strong> ${data.condition || 'N/A'}</p>
+                    <p><strong>Min Temp:</strong> ${data.minTemperature || 'N/A'}°C</p>
+                    <p><strong>Max Temp:</strong> ${data.maxTemperature || 'N/A'}°C</p>
+                    <p><strong>Humidity:</strong> ${data.humidity || 'N/A'}%</p>
+                    <p><strong>Pressure:</strong> ${data.pressure || 'N/A'}</p>
+                </div>
             </div>
-        </div>
-    `;
+        `;
 
-    weatherData.insertAdjacentHTML('beforeend', template);
-    weatherData.classList.remove('hidden');
+        weatherData.insertAdjacentHTML('beforeend', template);
+        weatherData.classList.remove('hidden');
+    }
 }
 
 function isValidInput(city) {
@@ -173,28 +180,32 @@ function isValidInput(city) {
 }
 
 function showError(message) {
-    errorElement.textContent = message;
-    errorElement.classList.add('visible');
+    if (errorElement) {
+        errorElement.textContent = message;
+        errorElement.classList.add('visible');
 
-    const closeBtn = document.createElement('button');
-    closeBtn.textContent = '×';
-    closeBtn.classList.add('close-btn');
-    closeBtn.setAttribute('aria-label', 'Close error message');
-    closeBtn.onclick = () => clearError();
+        const closeBtn = document.createElement('button');
+        closeBtn.textContent = '×';
+        closeBtn.classList.add('close-btn');
+        closeBtn.setAttribute('aria-label', 'Close error message');
+        closeBtn.onclick = () => clearError();
 
-    errorElement.innerHTML = '';
-    errorElement.appendChild(document.createTextNode(message));
-    errorElement.appendChild(closeBtn);
+        errorElement.innerHTML = '';
+        errorElement.appendChild(document.createTextNode(message));
+        errorElement.appendChild(closeBtn);
 
-    errorElement.setAttribute('tabindex', '-1');
-    errorElement.focus();
+        errorElement.setAttribute('tabindex', '-1');
+        errorElement.focus();
 
-    weatherData.innerHTML = '';
+        if (weatherData) weatherData.innerHTML = '';
+    }
 }
 
 function clearError() {
-    errorElement.textContent = '';
-    errorElement.classList.remove('visible');
+    if (errorElement) {
+        errorElement.textContent = '';
+        errorElement.classList.remove('visible');
+    }
 }
 
 function sanitizeHTML(str) {
@@ -269,25 +280,29 @@ function displayRecentSearches() {
         ? JSON.parse(localStorage.getItem('recentSearches')) || []
         : recentSearches;
     const list = document.getElementById('recent-list');
-    list.innerHTML = recent
-        .map(city => `
-            <li role="listitem">
-                <button class="recent-item" data-city="${sanitizeHTML(city)}">
-                    ${sanitizeHTML(city)}
-                </button>
-            </li>`)
-        .join('');
+    if (list) {
+        list.innerHTML = recent
+            .map(city => `
+                <li role="listitem">
+                    <button class="recent-item" data-city="${sanitizeHTML(city)}">
+                        ${sanitizeHTML(city)}
+                    </button>
+                </li>`)
+            .join('');
 
-    list.style.display = 'flex';
-    list.style.flexWrap = 'wrap';
-    list.style.listStyle = 'none';
+        list.style.display = 'flex';
+        list.style.flexWrap = 'wrap';
+        list.style.listStyle = 'none';
 
-    document.querySelectorAll('.recent-item').forEach(button => {
-        button.addEventListener('click', function () {
-            cityInput.value = this.dataset.city;
-            handleSubmit(new Event('submit'));
+        document.querySelectorAll('.recent-item').forEach(button => {
+            button.addEventListener('click', function () {
+                if (cityInput) {
+                    cityInput.value = this.dataset.city;
+                    handleSubmit(new Event('submit'));
+                }
+            });
         });
-    });
+    }
 }
 
 function loadRecentSearches() {
@@ -362,7 +377,7 @@ initialize();
 
 function handleClear(e) {
     e.preventDefault();
-    cityInput.value = '';
+    if (cityInput) cityInput.value = '';
     clearError();
 }
 
