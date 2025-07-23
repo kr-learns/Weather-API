@@ -23,6 +23,7 @@ function getElement(selector) {
 const form = getElement('#weather-form');
 const cityInput = getElement('#city');
 const weatherData = getElement('#weather-data');
+
 const weatherBtn = getElement('#weather-btn');
 const searchBtn = getElement('#search-btn');
 const clearBtn = getElement('#clear-btn'); // Ensure no duplicate declaration
@@ -50,6 +51,7 @@ async function handleSubmit(e) {
     e.preventDefault();
     const city = cityInput?.value.trim();
 
+    // Clear the previous error message when a new search starts
     clearError();
 
     if (!city) {
@@ -57,19 +59,22 @@ async function handleSubmit(e) {
         return;
     }
 
+
+
     if (!isValidInput(city)) {
-        showError('❌ Invalid city name. Only letters, spaces, apostrophes, periods, and hyphens are allowed.');
+      
+        showError('Please enter a valid city name (e.g., São Paulo, O\'Fallon).');
         return;
     }
 
     try {
         toggleLoading(true);
         const data = await fetchWeatherData(city);
-
+        
         displayWeather(data);
         addToRecentSearches(city);
     } catch (error) {
-        console.error(error);
+        console.log(error)
         showError(error.message);
     } finally {
         toggleLoading(false);
