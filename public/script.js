@@ -25,7 +25,9 @@ const errorElement = getElement('#city-error');
 
 let recentSearches = [];
 
-form.addEventListener('submit', handleSubmit);
+if (form) {
+    form.addEventListener('submit', handleSubmit);
+}
 
 // Add the clear button event listener after form event listener
 if (clearBtn) {
@@ -86,20 +88,20 @@ async function fetchWeatherData(city) {
         }
 
         const config = await configResponse.json();
-        
+
         // Check if URL exists in config
         if (!config.API_URL) {
             throw new Error('API URL not configured');
         }
 
-       
-       const URL = config.API_URL || 'https://weather-api-ex1z.onrender.com'
-        
+
+        const URL = config.API_URL || 'https://weather-api-ex1z.onrender.com'
+
         // Encode the city name for the URL
         const encodedCity = encodeURIComponent(city);
-        
+
         const response = await fetch(`${URL}/api/weather/${encodedCity}`);
-        console.log('response status',response.status)
+        console.log('response status', response.status)
         if (!response.ok) {
             const contentType = response.headers.get('Content-Type');
 
@@ -290,8 +292,7 @@ function displayRecentSearches() {
         : recentSearches;
     const list = document.getElementById('recent-list');
     list.innerHTML = recent
-        .map(city => `
-            <li role="listitem">
+        .map(city => `            <li role="listitem">
                 <button class="recent-item" data-city="${sanitizeHTML(city)}">
                     ${sanitizeHTML(city)}
                 </button>
@@ -313,7 +314,6 @@ function displayRecentSearches() {
 function loadRecentSearches() {
     displayRecentSearches();
 }
-
 function setupServiceWorker() {
     window.addEventListener('load', () => {
         navigator.serviceWorker.register('/sw.js')
@@ -388,8 +388,10 @@ function handleClear(e) {
     clearError(); // Clear any error messages
 }
 
-export {
+module.exports = {
     fetchWeatherData,
     isValidInput,
     addToRecentSearches
 };
+
+
