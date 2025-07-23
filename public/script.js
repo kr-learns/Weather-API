@@ -1,7 +1,10 @@
+
 // Function to log selector failures
 function logSelectorFailure(selector) {
     console.error(`Selector failure: ${selector}`);
-    alert(`Failed to find element with selector: ${selector}. Please check the selector or update it if the target website has changed.`);
+    if (typeof window !== 'undefined' && typeof window.alert === 'function') {
+        window.alert(`Failed to find element with selector: ${selector}. Please check the selector or update it if the target website has changed.`);
+    }
 }
 
 // Function to get element by selector with logging
@@ -19,7 +22,7 @@ const cityInput = getElement('#city');
 const weatherData = getElement('#weather-data');
 const weatherBtn = getElement('#weather-btn');
 const searchBtn = getElement('#search-btn');
-const clearBtn = getElement('#clear-btn'); // Add this line
+const clearBtn = getElement('#clear-btn');
 const spinner = getElement('.spinner');
 const errorElement = getElement('#city-error');
 
@@ -38,20 +41,17 @@ function initialize() {
     loadConfig();
 }
 
-
 async function handleSubmit(e) {
     e.preventDefault();
     const city = cityInput.value.trim();
 
     clearError();
 
-    // ✅ Empty check
     if (city === '') {
         showError('City name cannot be empty.');
         return;
     }
 
-    // ✅ City format validation
     if (!isValidInput(city)) {
         showError('❌ Invalid city name. Only letters, spaces, apostrophes, periods, and hyphens are allowed.');
         return;
@@ -71,15 +71,12 @@ async function handleSubmit(e) {
     }
 }
 
-
 async function fetchWeatherData(city) {
     try {
-        // First check if city is provided
         if (!city) {
             throw new Error('City parameter is required');
         }
 
-        // Get config with error handling
         const configResponse = await fetch('https://weather-api-ex1z.onrender.com/config');
         if (!configResponse.ok) {
             throw new Error('Failed to load configuration');
@@ -87,19 +84,16 @@ async function fetchWeatherData(city) {
 
         const config = await configResponse.json();
         
-        // Check if URL exists in config
         if (!config.API_URL) {
             throw new Error('API URL not configured');
         }
 
-       
-       const URL = config.API_URL || 'https://weather-api-ex1z.onrender.com'
+        const URL = config.API_URL || 'https://weather-api-ex1z.onrender.com';
         
-        // Encode the city name for the URL
         const encodedCity = encodeURIComponent(city);
         
         const response = await fetch(`${URL}/api/weather/${encodedCity}`);
-        console.log('response status',response.status)
+        console.log('response status', response.status);
         if (!response.ok) {
             const contentType = response.headers.get('Content-Type');
 
@@ -136,7 +130,6 @@ function displayWeather(data) {
         return;
     }
 
-    // Determine emoji based on condition
     let emoji = '';
     const condition = data.condition?.toLowerCase() || '';
     if (condition.includes('sun')) emoji = '☀️';
@@ -146,15 +139,13 @@ function displayWeather(data) {
     else if (condition.includes('storm')) emoji = '⛈️';
     else emoji = '🌈';
 
-    // Show emoji at the top
     const weatherIcon = document.getElementById('weather-icon');
     if (weatherIcon) {
         weatherIcon.textContent = emoji;
-        weatherIcon.style.display = 'block'; // in case it's hidden
+        weatherIcon.style.display = 'block';
         weatherIcon.classList.remove('hidden');
     }
 
-    // Clear old cards but keep emoji
     Array.from(weatherData.children).forEach(child => {
         if (child.id !== 'weather-icon') child.remove();
     });
@@ -178,7 +169,6 @@ function displayWeather(data) {
 }
 
 function isValidInput(city) {
-    // Allow letters, spaces, apostrophes, hyphens, and periods
     return /^[\p{L}\p{M}\s'’.-]{2,50}$/u.test(city);
 }
 
@@ -192,20 +182,14 @@ function showError(message) {
     closeBtn.setAttribute('aria-label', 'Close error message');
     closeBtn.onclick = () => clearError();
 
-    // Append close button to the error message
     errorElement.innerHTML = '';
     errorElement.appendChild(document.createTextNode(message));
     errorElement.appendChild(closeBtn);
 
-
     errorElement.setAttribute('tabindex', '-1');
     errorElement.focus();
 
-    weatherData.innerHTML = ''; // Clear previous data
-
-    // setTimeout(() => { errorElement.classList.remove('visible');
-    //     errorElement.removeAttribute('tabindex');
-    // }, 5000);
+    weatherData.innerHTML = '';
 }
 
 function clearError() {
@@ -243,13 +227,12 @@ async function loadConfig() {
         return limit;
     } catch (error) {
         console.error('Failed to load environment config:', error);
-        return 5; // Fallback limit
+        return 5;
     }
 }
 
-
 function addToRecentSearches(city) {
-    const normalizedCity = city.trim().toLowerCase(); // Normalize to lowercase
+    const normalizedCity = city.trim().toLowerCase();
     let limit = parseInt(localStorage.getItem('recentSearchLimit'), 10) || 5;
     try {
         if (isLocalStorageAvailable()) {
@@ -266,10 +249,8 @@ function addToRecentSearches(city) {
     } catch (error) {
         if (error.name === 'QuotaExceededError') {
             console.warn('LocalStorage quota exceeded. Removing oldest search.');
-
             let recent = JSON.parse(localStorage.getItem('recentSearches')) || [];
             recent.pop();
-
             try {
                 localStorage.setItem('recentSearches', JSON.stringify(recent));
             } catch (retryError) {
@@ -282,7 +263,6 @@ function addToRecentSearches(city) {
 
     displayRecentSearches();
 }
-
 
 function displayRecentSearches() {
     const recent = isLocalStorageAvailable()
@@ -304,8 +284,8 @@ function displayRecentSearches() {
 
     document.querySelectorAll('.recent-item').forEach(button => {
         button.addEventListener('click', function () {
-            cityInput.value = this.dataset.city;  // Set input value to clicked city
-            handleSubmit(new Event('submit'));    // Trigger search
+            cityInput.value = this.dataset.city;
+            handleSubmit(new Event('submit'));
         });
     });
 }
@@ -319,8 +299,6 @@ function setupServiceWorker() {
         navigator.serviceWorker.register('/sw.js')
             .then((registration) => {
                 console.log('Service Worker registered with scope:', registration.scope);
-
-                // Listen for updates
                 registration.onupdatefound = () => {
                     const newSW = registration.installing;
                     newSW.onstatechange = () => {
@@ -383,12 +361,12 @@ function showUpdateNotification() {
 initialize();
 
 function handleClear(e) {
-    e.preventDefault(); // Prevent form submission
-    cityInput.value = ''; // Clear the input field
-    clearError(); // Clear any error messages
+    e.preventDefault();
+    cityInput.value = '';
+    clearError();
 }
 
-export {
+module.exports = {
     fetchWeatherData,
     isValidInput,
     addToRecentSearches
