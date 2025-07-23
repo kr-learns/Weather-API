@@ -1,57 +1,43 @@
-// Function to log selector failures
-function logSelectorFailure(selector) {
-    console.error(`Selector failure: ${selector}`);
-    alert(`Failed to find element with selector: ${selector}. Please check the selector or update it if the target website has changed.`);
+// public/script.js
+
+function isValidInput(city) {
+  // Accepts letters (including accented), spaces, apostrophes, periods, and hyphens
+  const cityRegex = /^[\p{L}\s.'-]{2,}$/u;
+  return cityRegex.test(city.trim());
 }
 
-// Function to get element by selector with logging
-function getElement(selector) {
-    const element = document.querySelector(selector);
-    if (!element) {
-        logSelectorFailure(selector);
-    }
-    return element;
+function fetchWeatherData(city) {
+  return fetch(`/weather/${encodeURIComponent(city)}`).then(
+    async (response) => {
+      if (!response.ok) {
+        const data = await response.json();
+        throw new Error(data.error || "Something went wrong");
+      }
+      return response.json();
+    },
+  );
 }
 
-// Update existing code to use getElement function
-const form = getElement('#weather-form');
-const cityInput = getElement('#city');
-const weatherData = getElement('#weather-data');
-const weatherBtn = getElement('#weather-btn');
-const searchBtn = getElement('#search-btn');
-const clearBtn = getElement('#clear-btn'); // Add this line
-const spinner = getElement('.spinner');
-const errorElement = getElement('#city-error');
-
-let recentSearches = [];
-
-form.addEventListener('submit', handleSubmit);
-
-// Add the clear button event listener after form event listener
-if (clearBtn) {
-    clearBtn.addEventListener('click', handleClear);
+function addToRecentSearches(city) {
+  try {
+    const stored = JSON.parse(localStorage.getItem("recentSearches") || "[]");
+    const updated = [city, ...stored.filter((c) => c !== city)].slice(0, 5);
+    localStorage.setItem("recentSearches", JSON.stringify(updated));
+  } catch (e) {
+    console.error("Failed to access localStorage:", e);
+  }
 }
 
-function initialize() {
-    loadRecentSearches();
-    setupServiceWorker();
-    loadConfig();
-}
+function init() {
+  const form = document.getElementById("weather-form");
+  const input = document.getElementById("city");
+  const errorDiv = document.getElementById("city-error");
+  const resultDiv = document.getElementById("weather-data");
 
-
-async function handleSubmit(e) {
+  document.getElementById("submit-btn").addEventListener("click", async (e) => {
     e.preventDefault();
-    const city = cityInput.value.trim();
+    const city = input.value.trim();
 
-    clearError();
-
-    // ✅ Empty check
-    if (city === '') {
-        showError('City name cannot be empty.');
-        return;
-    }
-
-    // ✅ City format validation
     if (!isValidInput(city)) {
         showError('❌ Invalid city name. Only letters, spaces, apostrophes, periods, and hyphens are allowed.');
         return;
@@ -227,169 +213,25 @@ function isLocalStorageAvailable() {
         console.warn("⚠️ localStorage not available. Using in-memory fallback.");
         return false;
     }
-}
 
-async function loadConfig() {
     try {
-        const response = await fetch('https://weather-api-ex1z.onrender.com/config');
-        if (!response.ok) throw new Error('Failed to load config');
-
-        const config = await response.json();
-
-        const limit = parseInt(config.RECENT_SEARCH_LIMIT, 10) || 5;
-        localStorage.setItem('recentSearchLimit', limit);
-        console.log(`Recent search limit: ${limit}`);
-
-        return limit;
-    } catch (error) {
-        console.error('Failed to load environment config:', error);
-        return 5; // Fallback limit
+      const data = await fetchWeatherData(city);
+      resultDiv.textContent = `${data.temperature}, ${data.condition}`;
+      errorDiv.textContent = "";
+      addToRecentSearches(city);
+    } catch (err) {
+      errorDiv.textContent = err.message;
+      resultDiv.textContent = "";
     }
+  });
 }
 
-
-function addToRecentSearches(city) {
-    const normalizedCity = city.trim().toLowerCase(); // Normalize to lowercase
-    let limit = parseInt(localStorage.getItem('recentSearchLimit'), 10) || 5;
-    try {
-        if (isLocalStorageAvailable()) {
-            let recent = JSON.parse(localStorage.getItem('recentSearches')) || [];
-            recent = recent.filter(c => c.toLowerCase() !== normalizedCity);
-            recent = [city, ...recent].slice(0, limit);
-            localStorage.setItem('recentSearches', JSON.stringify(recent));
-        } else {
-            recentSearches = recentSearches
-                .filter(c => c.toLowerCase() !== normalizedCity)
-                .slice(0, limit - 1);
-            recentSearches.unshift(city);
-        }
-    } catch (error) {
-        if (error.name === 'QuotaExceededError') {
-            console.warn('LocalStorage quota exceeded. Removing oldest search.');
-
-            let recent = JSON.parse(localStorage.getItem('recentSearches')) || [];
-            recent.pop();
-
-            try {
-                localStorage.setItem('recentSearches', JSON.stringify(recent));
-            } catch (retryError) {
-                console.error('Still failing after removing oldest entry:', retryError);
-            }
-        } else {
-            console.error('Error adding to recent searches:', error);
-        }
-    }
-
-    displayRecentSearches();
-}
-
-
-function displayRecentSearches() {
-    const recent = isLocalStorageAvailable()
-        ? JSON.parse(localStorage.getItem('recentSearches')) || []
-        : recentSearches;
-    const list = document.getElementById('recent-list');
-    list.innerHTML = recent
-        .map(city => `
-            <li role="listitem">
-                <button class="recent-item" data-city="${sanitizeHTML(city)}">
-                    ${sanitizeHTML(city)}
-                </button>
-            </li>`)
-        .join('');
-
-    list.style.display = 'flex';
-    list.style.flexWrap = 'wrap';
-    list.style.listStyle = 'none';
-
-    document.querySelectorAll('.recent-item').forEach(button => {
-        button.addEventListener('click', function () {
-            cityInput.value = this.dataset.city;  // Set input value to clicked city
-            handleSubmit(new Event('submit'));    // Trigger search
-        });
-    });
-}
-
-function loadRecentSearches() {
-    displayRecentSearches();
-}
-
-function setupServiceWorker() {
-    window.addEventListener('load', () => {
-        navigator.serviceWorker.register('/sw.js')
-            .then((registration) => {
-                console.log('Service Worker registered with scope:', registration.scope);
-
-                // Listen for updates
-                registration.onupdatefound = () => {
-                    const newSW = registration.installing;
-                    newSW.onstatechange = () => {
-                        if (newSW.state === 'installed' && navigator.serviceWorker.controller) {
-                            console.log('New content is available, please refresh.');
-                            showUpdateNotification();
-                        }
-                    };
-                };
-            })
-            .catch((error) => console.error('Service Worker registration failed:', error));
-    });
-}
-
-function showUpdateNotification() {
-    const updateBanner = document.createElement('div');
-    updateBanner.classList.add('update-banner');
-    updateBanner.innerHTML = `
-        <p>New version available. <button id="reload-btn">Reload</button></p>
-    `;
-
-    document.body.appendChild(updateBanner);
-
-    document.getElementById('reload-btn').addEventListener('click', () => {
-        window.location.reload();
-    });
-
-    const style = document.createElement('style');
-    style.textContent = `
-        .update-banner {
-            position: fixed;
-            bottom: 0;
-            left: 0;
-            right: 0;
-            background: #0078D7;
-            color: white;
-            padding: 15px;
-            text-align: center;
-            z-index: 9999;
-        }
-        .update-banner button {
-            margin-left: 10px;
-            padding: 5px 10px;
-            cursor: pointer;
-        }
-    `;
-    document.head.appendChild(style);
-}
-
-// Documentation for updating CSS selectors
-/**
- * If the target website changes its structure, the CSS selectors used in this script may need to be updated.
- * To update the selectors:
- * 1. Identify the new structure of the target website.
- * 2. Update the selectors in the getElement function calls.
- * 3. Test the application to ensure the new selectors work correctly.
- */
-
-// Initialize the app
-initialize();
-
-function handleClear(e) {
-    e.preventDefault(); // Prevent form submission
-    cityInput.value = ''; // Clear the input field
-    clearError(); // Clear any error messages
-}
-
-export {
-    fetchWeatherData,
+// Only export if running in a test (CommonJS)
+if (typeof module !== "undefined" && module.exports) {
+  module.exports = {
     isValidInput,
-    addToRecentSearches
-};
+    fetchWeatherData,
+    addToRecentSearches,
+    init,
+  };
+}
