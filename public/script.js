@@ -162,13 +162,13 @@ function displayWeather(data) {
     const template = `
         <div class="weather-card">
             <div class="weather-details">
-                <p><strong>Temp:</strong> ${data.temperature || 'N/A'}°C</p>
-                <p><strong>Date:</strong> ${data.date || 'N/A'}</p>
-                <p><strong>Condition:</strong> ${data.condition || 'N/A'}</p>
-                <p><strong>Min Temp:</strong> ${data.minTemperature || 'N/A'}°C</p>
-                <p><strong>Max Temp:</strong> ${data.maxTemperature || 'N/A'}°C</p>
-                <p><strong>Humidity:</strong> ${data.humidity || 'N/A'}%</p>
-                <p><strong>Pressure:</strong> ${data.pressure || 'N/A'}</p>
+                <p><strong>Temp:</strong> ${sanitizeHTML(data.temperature || 'N/A')}°C</p>
+                <p><strong>Date:</strong> ${sanitizeHTML(data.date || 'N/A')}</p>
+                <p><strong>Condition:</strong> ${sanitizeHTML(data.condition || 'N/A')}</p>
+                <p><strong>Min Temp:</strong> ${sanitizeHTML(data.minTemperature || 'N/A')}°C</p>
+                <p><strong>Max Temp:</strong> ${sanitizeHTML(data.maxTemperature || 'N/A')}°C</p>
+                <p><strong>Humidity:</strong> ${sanitizeHTML(data.humidity || 'N/A')}%</p>
+                <p><strong>Pressure:</strong> ${sanitizeHTML(data.pressure || 'N/A')}</p> 
             </div>
         </div>
     `;
