@@ -20,6 +20,7 @@ const weatherData = getElement('#weather-data');
 const submitBtn = getElement('#submit-btn');
 const clearBtn = getElement('#clear-btn'); // Add this line
 const spinner = getElement('.spinner');
+const clr_spinner = getElement('.clr-spinner');
 const errorElement = getElement('#city-error');
 
 let recentSearches = [];
@@ -121,6 +122,11 @@ async function fetchWeatherData(city) {
 function toggleLoading(isLoading) {
     submitBtn.disabled = isLoading;
     spinner.classList.toggle('hidden', !isLoading);
+}
+
+function toggleClearLoading(isLoading){
+    clearBtn.disabled = isLoading;
+    clr_spinner.classList.toggle('hidden', !isLoading);
 }
 
 function displayWeather(data) {
@@ -375,8 +381,13 @@ initialize();
 
 function handleClear(e) {
     e.preventDefault(); // Prevent form submission
-    cityInput.value = ''; // Clear the input field
-    clearError(); // Clear any error messages
+    toggleClearLoading(true); // Show loading spinner
+
+    setTimeout(() => {
+        cityInput.value = ''; // Clear the input field
+        clearError();         // Clear error messages
+        toggleClearLoading(false); // Hide spinner
+    }, 300); // Simulate a short delay for UI feedback
 }
 
 module.exports = {
