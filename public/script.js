@@ -28,6 +28,7 @@ const weatherBtn = getElement('#weather-btn');
 const searchBtn = getElement('#search-btn');
 const clearBtn = getElement('#clear-btn'); // Ensure no duplicate declaration
 const spinner = getElement('.spinner');
+const clr_spinner = getElement('.clr-spinner');
 const errorElement = getElement('#city-error');
 
 let recentSearches = [];
@@ -93,15 +94,17 @@ async function fetchWeatherData(city) {
         }
 
         const config = await configResponse.json();
-        
+
+        // Check if URL exists in config
         if (!config.API_URL) {
             throw new Error('API URL not configured');
         }
 
-        const URL = config.API_URL || 'https://weather-api-ex1z.onrender.com';
-        
+        const URL = config.API_URL || 'https://weather-api-ex1z.onrender.com'
+
+        // Encode the city name for the URL
         const encodedCity = encodeURIComponent(city);
-        
+
         const response = await fetch(`${URL}/api/weather/${encodedCity}`);
         console.log('response status', response.status);
         if (!response.ok) {
@@ -132,6 +135,11 @@ function toggleLoading(isLoading) {
     if (weatherBtn) weatherBtn.disabled = isLoading;
     if (searchBtn) searchBtn.disabled = isLoading;
     if (spinner) spinner.classList.toggle('hidden', !isLoading);
+}
+
+function toggleClearLoading(isLoading){
+    clearBtn.disabled = isLoading;
+    clr_spinner.classList.toggle('hidden', !isLoading);
 }
 
 function displayWeather(data) {
@@ -313,7 +321,6 @@ function displayRecentSearches() {
 function loadRecentSearches() {
     displayRecentSearches();
 }
-
 function setupServiceWorker() {
     window.addEventListener('load', () => {
         navigator.serviceWorker.register('/sw.js')
@@ -381,9 +388,14 @@ function showUpdateNotification() {
 initialize();
 
 function handleClear(e) {
-    e.preventDefault();
-    if (cityInput) cityInput.value = '';
-    clearError();
+    e.preventDefault(); // Prevent form submission
+    toggleClearLoading(true); // Show loading spinner
+
+    setTimeout(() => {
+        cityInput.value = ''; // Clear the input field
+        clearError();         // Clear error messages
+        toggleClearLoading(false); // Hide spinner
+    }, 300); // Simulate a short delay for UI feedback
 }
 
 module.exports = {
@@ -391,3 +403,5 @@ module.exports = {
     isValidInput,
     addToRecentSearches
 };
+
+
